@@ -180,3 +180,33 @@ class call_participant(Filter):
                 return True
             return self.flags & update.participant.action
         return False
+
+# =======================
+# Join/Left Filters Below
+# =======================
+
+async def _participant_joined(_, __, update: Update):
+    # Only trigger for participant join
+    if isinstance(update, UpdatedGroupCallParticipant):
+        action = getattr(update.participant, "action", None)
+        if action is not None and hasattr(GroupCallParticipant, "Action"):
+            joined_flag = getattr(GroupCallParticipant.Action, "JOINED", None)
+            if joined_flag is not None:
+                return bool(action & joined_flag)
+    return False
+
+async def _participant_left(_, __, update: Update):
+    # Only trigger for participant left
+    if isinstance(update, UpdatedGroupCallParticipant):
+        action = getattr(update.participant, "action", None)
+        if action is not None and hasattr(GroupCallParticipant, "Action"):
+            left_flag = getattr(GroupCallParticipant.Action, "LEFT", None)
+            if left_flag is not None:
+                return bool(action & left_flag)
+    return False
+
+group_call_participant_joined = create(_participant_joined, name="group_call_participant_joined")
+group_call_participant_left = create(_participant_left, name="group_call_participant_left")
+
+# Now you can use:
+# from pytgcalls.filters import group_call_participant_joined, group_call_participant_left
